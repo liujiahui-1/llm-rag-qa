@@ -1,21 +1,34 @@
 # -*- coding: utf-8 -*-
 """
-step3_解剖.py —— 把 step3_ask.py 拆开看，一步一打印
+explain_prompt.py —— 把 step3_ask.py 拆开看，一步一打印
 
 四段演示：
   1. 拼 Prompt：一块一块拼给你看（像填请假条模板）
   2. 发出去的请求长什么样（像填寄件单）
   3. 收回来的 JSON 怎么一层层拆出答案（像拆快递套娃）
   4. 温度实验：同一个问题，低温 vs 高温，看模型稳不稳
+
+运行（任选其一，路径都能对上）：
+    python examples/explain_prompt.py
+    cd examples && python explain_prompt.py
 """
 import os
+import sys
 import json
+from pathlib import Path
 import numpy as np
 import requests
 from dotenv import load_dotenv
+
+# 本脚本在 examples/ 下，父目录才是项目根：
+# 不加这一行，import step2_embed 会失败（Python 只在 sys.path 里找模块）
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
+
 from step2_embed import embed, CHUNK_FILE, VEC_FILE
 
-load_dotenv()
+# 显式指定 .env 位置，避免"在 examples/ 里运行就找不到密钥"
+load_dotenv(ROOT / ".env")
 API_KEY = os.getenv("DEEPSEEK_API_KEY")
 Q = "宿舍最晚几点关门"
 

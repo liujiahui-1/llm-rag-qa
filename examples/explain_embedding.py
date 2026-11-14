@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-step2_解剖.py —— 把 step2_embed.py 拆开，一步一打印
+explain_embedding.py —— 把 step2_embed.py 拆开，一步一打印
 
 这个文件不做检索，只做一件事：
 拿三句短文本，把「文字 → 1024 个数字」的全过程一格一格打出来。
 看懂这个，再回去看 step2_embed.py，就只是"同一条流水线 + 几个函数壳子"。
+
+运行：python examples/explain_embedding.py
+（不依赖任何数据文件，也不调用 API，可直接运行）
 """
 import re
 import hashlib

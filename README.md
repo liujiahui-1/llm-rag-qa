@@ -83,7 +83,12 @@ python step2_embed.py "转专业有什么限制"    # 检索：返回最相关�
 python step3_ask.py "补考成绩怎么记载"      # 问答：检索 + 组装 Prompt + 生成答案
 ```
 
-两个 `*_解剖.py` 是配套的教学脚本，逐步打印中间过程（文字如何变成向量、Prompt 如何拼装、API 返回如何拆包），便于核对每一步的实际输入输出。
+`examples/` 下两个脚本用于逐步打印中间结果（文字如何变成向量、Prompt 如何拼装、API 返回如何拆包），便于核对每一步的实际输入输出：
+
+```bash
+python examples/explain_embedding.py   # 不依赖数据、不调 API，可离线运行
+python examples/explain_prompt.py      # 会调用 3 次 API 演示温度差异
+```
 
 ## 项目结构
 
@@ -93,8 +98,9 @@ llm-rag-qa/
 ├── step1_split.py     # PDF 加载与文本切分
 ├── step2_embed.py     # 向量化建库 + 相似度检索
 ├── step3_ask.py       # 检索 + Prompt 组装 + 生成
-├── step2_解剖.py      # 教学：逐格打印文字变向量的过程
-├── step3_解剖.py      # 教学：逐步演示拼 Prompt / 发请求 / 拆 JSON
+├── examples/          # 可运行的中间过程演示
+│   ├── explain_embedding.py   # 逐格打印文字变向量的全过程
+│   └── explain_prompt.py      # 逐步演示拼 Prompt / 发请求 / 拆 JSON
 ├── data/              # 示例语料（学生事务手册）
 └── output/            # 切分与向量产物（本地生成，不入库）
 ```
