@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>校园学生事务问答 · RAG Demo</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --card:#ffffff; --ink:#1b1f24; --ink-2:#5b6572;
+    --line:#e3e7ec; --brand:#2f6bff; --brand-soft:#eaf0ff;
+    --ok:#1a9c6b; --warn:#c2410c; --radius:14px;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;
+    line-height:1.65; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:760px; margin:0 auto; padding:24px 18px 64px}
+  header h1{font-size:20px; margin:0 0 6px; letter-spacing:.2px}
+  header p{margin:0; color:var(--ink-2); font-size:13px}
+  .status{
+    display:inline-flex; align-items:center; gap:7px; margin-top:12px;
+    background:var(--card); border:1px solid var(--line); border-radius:999px;
+    padding:5px 12px; font-size:12px; color:var(--ink-2);
+  }
+  .dot{width:7px; height:7px; border-radius:50%; background:var(--ok)}
+  .card{
+    background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+    padding:16px; margin-top:18px;
+  }
+  .card h2{font-size:13px; margin:0 0 10px; color:var(--ink-2); font-weight:600; letter-spacing:.4px}
+  textarea{
+    width:100%; min-height:76px; resize:vertical; padding:12px 14px;
+    border:1px solid var(--line); border-radius:10px; font:inherit; color:var(--ink);
+    background:#fbfcfd; outline:none;
+  }
+  textarea:focus{border-color:var(--brand); background:#fff; box-shadow:0 0 0 3px var(--brand-soft)}
+  .row{display:flex; gap:10px; align-items:center; margin-top:12px; flex-wrap:wrap}
+  button{
+    border:0; border-radius:10px; padding:10px 18px; font:inherit; font-weight:600;
+    background:var(--brand); color:#fff; cursor:pointer;
+  }
+  button:disabled{opacity:.55; cursor:not-allowed}
+  button.ghost{background:#fff; color:var(--ink-2); border:1px solid var(--line); font-weight:500}
+  .hint{font-size:12px; color:var(--ink-2)}
+  .examples{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px}
+  .chip{
+    font-size:12px; padding:6px 11px; border-radius:999px; cursor:pointer;
+    background:#fff; border:1px solid var(--line); color:var(--ink-2);
+  }
+  .chip:hover{border-color:var(--brand); color:var(--brand)}
+  #answer{white-space:pre-wrap; font-size:15px; min-height:24px}
+  #answer:empty::before{content:"答案会显示在这里"; color:#9aa4b0; font-size:14px}
+  .sources{display:flex; gap:8px; flex-wrap:wrap; margin-top:14px}
+  .src{
+    font-size:12px; padding:5px 10px; border-radius:8px;
+    background:var(--brand-soft); color:#2547a8; border:1px solid #d6e0ff;
+  }
+  .upload{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+  input[type=file]{font-size:13px; color:var(--ink-2)}
+  .history{margin-top:18px}
+  .item{border-top:1px solid var(--line); padding:12px 0}
+  .item:first-child{border-top:0; padding-top:0}
+  .q{font-size:14px; font-weight:600; cursor:pointer}
+  .q span{font-weight:400; color:#9aa4b0; font-size:12px; margin-left:8px}
+  .a{font-size:13.5px; color:var(--ink-2); margin-top:6px; white-space:pre-wrap}
+  .empty{font-size:13px; color:#9aa4b0}
+  .msg{font-size:13px; margin-top:8px}
+  .msg.err{color:var(--warn)}
+  footer{margin-top:28px; font-size:12px; color:#9aa4b0; text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>校园学生事务问答</h1>
+    <p>检索增强生成（RAG）演示 · FastAPI + DeepSeek</p>
+    <div class="status">
+      <i class="dot"></i><span id="kb">正在读取知识库状态…</span>
+    </div>
+  </header>
+
+  <!-- ① 提问区 -->
+  <section class="card">
+    <h2>提问</h2>
+    <textarea id="q" placeholder="例如：国家奖学金多少钱，怎么才能拿到？"></textarea>
+    <div class="row">
+      <button id="send">提问</button>
+      <span class="hint">回车发送，Shift+回车换行</span>
+    </div>
+    <div class="examples">
+      <span class="chip">补考成绩怎么记载</span>
+      <span class="chip">宿舍能用热得快吗</span>
+      <span class="chip">转专业有什么限制</span>
+      <span class="chip">论文查重率要求多少</span>
+    </div>
+  </section>
+
+  <!-- ② 答案区 -->
+  <section class="card">
+    <h2>回答（来自文档，带页码出处）</h2>
+    <div id="answer"></div>
+    <div class="sources" id="sources"></div>
+    <div class="msg" id="msg"></div>
+  </section>
+
+  <!-- ③ 上传区 -->
+  <section class="card">
+    <h2>更换知识库（上传 PDF 后自动重建索引）</h2>
+    <div class="upload">
+      <input type="file" id="file" accept="application/pdf">
+      <button class="ghost" id="upload">上传并重建</button>
+      <span class="hint" id="uptip">支持文本型 PDF，扫描件读不出文字</span>
+    </div>
+  </section>
+
+  <!-- ④ 会话历史 -->
+  <section class="card history">
+    <h2>本次会话（点击标题展开答案）</h2>
+    <div id="list"><span class="empty">还没有提问记录</span></div>
+  </section>
+
+  <footer>所有回答只依据上传的文档生成，不做自由发挥</footer>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const history = [];   // 会话历史就放在内存里，刷新页面清空
+
+/* ---------- 启动时读一次知识库状态 ---------- */
+async function refreshKB(){
+  try{
+    const r = await fetch('/api/health');
+    const d = await r.json();
+    $('kb').textContent = d.chunks
+      ? `知识库：${d.chunks} 块 · ${d.source}`
+      : '知识库为空，请先上传 PDF';
+  }catch(e){
+    $('kb').textContent = '服务未连接';
+  }
+}
+refreshKB();
+
+/* ---------- 提问：走流式接口，字一个个出现 ---------- */
+async function ask(){
+  const q = $('q').value.trim();
+  if(!q) return;
+  $('send').disabled = true;
+  $('answer').textContent = '';
+  $('sources').innerHTML = '';
+  $('msg').textContent = '检索中…';
+  $('msg').className = 'msg';
+
+  let answer = '';
+  let sources = [];
+
+  try{
+    const resp = await fetch('/api/ask/stream', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({question:q, top_k:3})
+    });
+    if(!resp.ok) throw new Error('HTTP ' + resp.status);
+
+    // 按行读 SSE：每条 "data: {...}"
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '';
+    while(true){
+      const {value, done} = await reader.read();
+      if(done) break;
+      buf += decoder.decode(value, {stream:true});
+      const lines = buf.split('\n');
+      buf = lines.pop();                     // 最后一段可能不完整，留到下一轮
+      for(const line of lines){
+        const t = line.trim();
+        if(!t.startsWith('data:')) continue;
+        const payload = t.slice(5).trim();
+        if(payload === '[DONE]') continue;
+        const obj = JSON.parse(payload);
+        if(obj.sources){ sources = obj.sources; renderSources(sources); }
+        if(obj.delta){ answer += obj.delta; $('answer').textContent = answer; }
+        if(obj.error){ throw new Error(obj.error); }
+      }
+    }
+    $('msg').textContent = '';
+    history.unshift({q, answer, sources, time:new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})});
+    renderHistory();
+  }catch(e){
+    $('msg').className = 'msg err';
+    $('msg').textContent = '出错了：' + e.message;
+  }finally{
+    $('send').disabled = false;
+  }
+}
+
+function renderSources(list){
+  $('sources').innerHTML = list.map(s =>
+    `<span class="src">第 ${s.page} 页 · 相似度 ${s.score}</span>`).join('');
+}
+
+function renderHistory(){
+  if(!history.length){ $('list').innerHTML = '<span class="empty">还没有提问记录</span>'; return; }
+  $('list').innerHTML = history.map((h,i) => `
+    <div class="item">
+      <div class="q" onclick="this.nextElementSibling.hidden = !this.nextElementSibling.hidden">
+        ${escapeHtml(h.q)}<span>${h.time}</span>
+      </div>
+      <div class="a" hidden>${escapeHtml(h.answer)}</div>
+    </div>`).join('');
+}
+
+function escapeHtml(s){
+  return s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+}
+
+/* ---------- 上传 PDF → 服务端重切分 + 重建向量库 ---------- */
+async function upload(){
+  const f = $('file').files[0];
+  if(!f){ $('uptip').textContent = '先选一个 PDF'; return; }
+  $('uptip').textContent = '处理中，大文件要等几秒…';
+  const fd = new FormData();
+  fd.append('file', f);
+  try{
+    const r = await fetch('/api/upload', {method:'POST', body:fd});
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.detail || '上传失败');
+    $('uptip').textContent = `已切换：${d.file} · ${d.pages} 页 → ${d.chunks} 块（平均 ${d.avg_len} 字）`;
+    refreshKB();
+  }catch(e){
+    $('uptip').textContent = '失败：' + e.message;
+  }
+}
+
+/* ---------- 事件绑定 ---------- */
+$('send').onclick = ask;
+$('upload').onclick = upload;
+$('q').addEventListener('keydown', e => {
+  if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); ask(); }
+});
+document.querySelectorAll('.chip').forEach(c => {
+  c.onclick = () => { $('q').value = c.textContent; ask(); };
+});
+</script>
+</body>
+</html>

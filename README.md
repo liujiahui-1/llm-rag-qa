@@ -10,7 +10,7 @@
 
 ## 技术栈
 
-Python 3 · LangChain（文档加载与切分） · numpy（向量检索） · DeepSeek API
+Python 3 · pypdf（文档加载） · LangChain（语义切分） · numpy（向量检索） · FastAPI（服务化） · DeepSeek API
 
 > 向量检索部分为手写实现（TF-IDF 哈希向量 + 余弦相似度），未使用 Chroma / FAISS。原因有二：一是向量库的本质只有「存矩阵 + 算相似度」两件事，手写一遍能确认自己真的理解；二是本项目运行环境为 Python 3.14，chromadb 依赖的 onnxruntime 尚无对应安装包。向量化封装在独立函数中，后续可无痛替换为 bge-m3 等真实 embedding 模型。
 
@@ -21,9 +21,9 @@ Python 3 · LangChain（文档加载与切分） · numpy（向量检索） · D
 - [x] 切分策略实测与分析
 - [x] 文本块向量化与相似度检索（1024 维 TF-IDF 哈希向量 + 余弦相似度）
 - [x] 问答链路打通：检索 → Prompt 组装 → 生成，答案带页码出处
+- [x] FastAPI 封装为 HTTP 服务 + 单页网页 demo（提问 / 流式输出 / 上传重建索引 / 会话历史）
 - [ ] 构建标注评测集（60 条），对比 chunk 300/500/800 与 rerank 开关对召回率的影响
 - [ ] 换用真实 embedding 模型（bge-m3）替换字面向量
-- [ ] FastAPI 封装为 HTTP 服务 + 网页 demo
 
 ## 实测数据
 
@@ -33,11 +33,11 @@ Python 3 · LangChain（文档加载与切分） · numpy（向量检索） · D
 |---|---|
 | 语料 | 《淮安大学学生事务手册》7 页 · 约 5900 字 |
 | 参数 | chunk_size=500 · chunk_overlap=50 |
-| 结果 | 15 块 · 平均 393 字 · 最长 496 · 最短 69 |
+| 结果 | 15 块 · 平均 395 字 · 最长 496 · 最短 69 |
 
 **两个发现：**
 
-1. **块不跨页**：PyPDFLoader 按页加载，`split_documents` 逐 Document 切分，块不会跨越页边界。好处是溯源精确到页；代价是跨页的长条款会被截断。
+1. **块不跨页**：加载时按页读取、逐页切分，块不会跨越页边界。好处是溯源精确到页；代价是跨页的长条款会被截断。
 2. **overlap 生效**：第 2 块开头是第 1 块结尾的 50 字重复，说明 overlap 正常工作。第 69 字的短块来自页面末尾的零头，属于块长分布里的隐患。
 
 ### 二、检索
@@ -60,12 +60,27 @@ Python 3 · LangChain（文档加载与切分） · numpy（向量检索） · D
 
 `temperature` 设为 0.1：事实问答需要稳定输出。实测 1.5 时同一问题两次回答核心一致但表述漂移。
 
+### 四、服务化（FastAPI）
+
+| 接口 | 方法 | 作用 |
+|---|---|---|
+| `/` | GET | 单页前端（提问 / 上传 / 会话历史） |
+| `/api/ask` | POST | 提问，一次性返回完整答案与来源（便于脚本测试） |
+| `/api/ask/stream` | POST | 提问，SSE 流式返回（先推来源块，再逐字推答案） |
+| `/api/upload` | POST | 上传 PDF，自动重新切分 + 重建向量库 |
+| `/api/health` | GET | 知识库状态：块数、来源文件、平均块长 |
+
+两个设计点：
+
+1. **检索 / Prompt 组装 / 生成三个函数从 step1–3 直接 import 复用**，服务层只负责「接请求、转调用、还结果」——脚本改函数这一步是服务化的前提。
+2. **流式输出**（`stream=True`）让用户看到答案逐字出现，首字延迟从「等完整答案的 3~5 秒」降到「约 1 秒」。这是感知速度，不是计算速度——总量不变，只是提前开始显示。
+
 ## 快速开始
 
 ```bash
 git clone https://gitee.com/liujiahui-1/llm-rag-qa.git
 cd llm-rag-qa
-pip install langchain-community langchain-text-splitters pypdf requests python-dotenv numpy
+pip install -r requirements.txt
 ```
 
 API Key 放在项目根目录 `.env`（已被 `.gitignore` 排除，不会上传）：
@@ -83,6 +98,13 @@ python step2_embed.py "转专业有什么限制"    # 检索：返回最相关�
 python step3_ask.py "补考成绩怎么记载"      # 问答：检索 + 组装 Prompt + 生成答案
 ```
 
+也可以直接启动网页版：
+
+```bash
+python app.py            # 或：python -m uvicorn app:app --port 8000
+# 浏览器打开 http://127.0.0.1:8000
+```
+
 `examples/` 下两个脚本用于逐步打印中间结果（文字如何变成向量、Prompt 如何拼装、API 返回如何拆包），便于核对每一步的实际输入输出：
 
 ```bash
@@ -98,6 +120,9 @@ llm-rag-qa/
 ├── step1_split.py     # PDF 加载与文本切分
 ├── step2_embed.py     # 向量化建库 + 相似度检索
 ├── step3_ask.py       # 检索 + Prompt 组装 + 生成
+├── app.py             # FastAPI 服务化：HTTP 接口 + 流式输出 + 上传重建索引
+├── templates/
+│   └── index.html     # 单页前端（提问 / 上传 / 会话历史）
 ├── examples/          # 可运行的中间过程演示
 │   ├── explain_embedding.py   # 逐格打印文字变向量的全过程
 │   └── explain_prompt.py      # 逐步演示拼 Prompt / 发请求 / 拆 JSON
@@ -110,4 +135,5 @@ llm-rag-qa/
 - **字面匹配，非语义理解**：向量由哈希词频构成，问「我成绩好能不能拿钱」时，文档中没有「钱」字，检索不到奖学金条款。换真实 embedding 模型可解决。
 - **IDF 对未登录词处理欠妥**：`log(N/(1+df))+1` 下，语料中从未出现的词 df=0，反而获得最高权重，查询含生僻词时会带偏相似度。
 - **无 rerank**：向量检索是粗筛，问题与文档块各自独立编码、无交互，容易召回「看起来像但答不了问题」的块。
-- **未服务化**：目前为本地脚本，无并发处理。
+- **单机 demo，无鉴权**：上传接口会直接覆盖知识库，且任何能访问服务的人都能上传——多人共用需要加用户隔离与文件校验。
+- **上传重建是同步阻塞的**：大文件会让请求等几秒，生产做法是丢进后台任务队列，前端轮询进度。
