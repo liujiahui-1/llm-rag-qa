@@ -52,7 +52,7 @@ class AskIn(BaseModel):
     """请求体：POST /api/ask 时前端发过来的 JSON 就是这个形状。
     有了它 FastAPI 会做类型校验，还会自动生成 /docs 接口文档。"""
     question: str
-    top_k: int = 3
+    top_k: int = 5
 
 
 def kb_state():

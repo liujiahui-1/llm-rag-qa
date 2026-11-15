@@ -160,7 +160,7 @@ async function ask(){
     const resp = await fetch('/api/ask/stream', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({question:q, top_k:3})
+      body: JSON.stringify({question:q, top_k:5})
     });
     if(!resp.ok) throw new Error('HTTP ' + resp.status);
 

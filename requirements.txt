@@ -1,6 +1,7 @@
 fastapi>=0.163
 uvicorn[standard]>=0.54
 python-multipart>=0.0.33
+pydantic>=2.12
 langchain-text-splitters>=1.1
 pypdf>=7.0
 numpy>=2.5
