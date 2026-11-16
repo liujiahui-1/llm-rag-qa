@@ -1,0 +1,238 @@
+{
+  "_说明": "评测集 v0.2 · answer_keywords 必须是原文中的短词（抗标点/空白差异）；gold_chunks 由人工标注，允许标多个块",
+  "_怎么判命中": "检索返回 top_k 块里只要有 gold_chunk 就算 Hit",
+  "questions": [
+    {
+      "id": 1,
+      "question": "国家奖学金多少钱",
+      "answer_keywords": [
+        "8000",
+        "国家奖学金"
+      ],
+      "gold_chunks": [
+        10
+      ]
+    },
+    {
+      "id": 2,
+      "question": "哪些情况不能转专业",
+      "answer_keywords": [
+        "艺术类",
+        "体育类",
+        "专升本"
+      ],
+      "gold_chunks": [
+        2
+      ]
+    },
+    {
+      "id": 3,
+      "question": "补考成绩怎么记载",
+      "answer_keywords": [
+        "60",
+        "1.0",
+        "补考"
+      ],
+      "gold_chunks": [
+        13
+      ]
+    },
+    {
+      "id": 4,
+      "question": "生源地助学贷款一年最多贷多少",
+      "answer_keywords": [
+        "16000",
+        "财政补贴"
+      ],
+      "gold_chunks": [
+        11
+      ]
+    },
+    {
+      "id": 5,
+      "question": "闭卷考试能带电子设备吗",
+      "answer_keywords": [
+        "不得携带",
+        "电子设备"
+      ],
+      "gold_chunks": [
+        5
+      ]
+    },
+    {
+      "id": 6,
+      "question": "新生入学要带什么",
+      "answer_keywords": [
+        "录取通知书",
+        "身份证"
+      ],
+      "gold_chunks": [
+        0
+      ]
+    },
+    {
+      "id": 7,
+      "question": "新生入学后要复查什么",
+      "answer_keywords": [
+        "复查",
+        "录取手续",
+        "身体状况"
+      ],
+      "gold_chunks": [
+        0
+      ]
+    },
+    {
+      "id": 8,
+      "question": "学期注册的时间和地点",
+      "answer_keywords": [
+        "开学后第一周",
+        "教务办公室"
+      ],
+      "gold_chunks": [
+        0
+      ]
+    },
+    {
+      "id": 9,
+      "question": "学生可以申请休学的条件",
+      "answer_keywords": [
+        "休学"
+      ],
+      "gold_chunks": [
+        1
+      ]
+    },
+    {
+      "id": 10,
+      "question": "转专业申请条件",
+      "answer_keywords": [
+        "无违纪记录",
+        "3.0",
+        "笔试",
+        "面试",
+        "10%"
+      ],
+      "gold_chunks": [
+        1
+      ]
+    },
+    {
+      "id": 11,
+      "question": "通识选修课包括哪些，且应修多少学分",
+      "answer_keywords": [
+        "8 学分",
+        "人文社科",
+        "艺术类"
+      ],
+      "gold_chunks": [
+        2
+      ]
+    },
+    {
+      "id": 12,
+      "question": "怎么选课",
+      "answer_keywords": [
+        "三轮",
+        "预选",
+        "正选",
+        "补退选"
+      ],
+      "gold_chunks": [
+        2
+      ]
+    },
+    {
+      "id": 13,
+      "question": "哪类课程不能免修",
+      "answer_keywords": [
+        "不得免修"
+      ],
+      "gold_chunks": [
+        3
+      ]
+    },
+    {
+      "id": 14,
+      "question": "平均学分绩点怎么计算",
+      "answer_keywords": [
+        "加权平均",
+        "GPA"
+      ],
+      "gold_chunks": [
+        4
+      ]
+    },
+    {
+      "id": 15,
+      "question": "补考参加时间及成绩计算",
+      "answer_keywords": [
+        "第二周",
+        "60",
+        "1.0"
+      ],
+      "gold_chunks": [
+        4
+      ]
+    },
+    {
+      "id": 16,
+      "question": "实践环节包括哪些部分",
+      "answer_keywords": [
+        "认识实习",
+        "生产实习",
+        "毕业实习",
+        "必修"
+      ],
+      "gold_chunks": [
+        6
+      ]
+    },
+    {
+      "id": 17,
+      "question": "实习结束后要交哪些材料",
+      "answer_keywords": [
+        "周记",
+        "3000",
+        "鉴定表"
+      ],
+      "gold_chunks": [
+        6
+      ]
+    },
+    {
+      "id": 18,
+      "question": "学生毕业条件是什么",
+      "answer_keywords": [
+        "全部课程与实践环节",
+        "毕业证书"
+      ],
+      "gold_chunks": [
+        7
+      ]
+    },
+    {
+      "id": 19,
+      "question": "学士学位授予条件",
+      "answer_keywords": [
+        "2.0",
+        "425",
+        "中等"
+      ],
+      "gold_chunks": [
+        7
+      ]
+    },
+    {
+      "id": 20,
+      "question": "宿舍楼开放时间",
+      "answer_keywords": [
+        "6:00",
+        "23:30"
+      ],
+      "gold_chunks": [
+        8
+      ]
+    }
+  ]
+}
