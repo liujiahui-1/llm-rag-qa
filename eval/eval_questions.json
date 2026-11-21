@@ -233,6 +233,63 @@
       "gold_chunks": [
         8
       ]
+    },
+    {
+      "id": 21,
+      "question": "怎么申请转专业",
+      "answer_keywords": [
+        "全日制本科一年级",
+        "无违纪",
+        "笔试",
+        "面试"
+      ],
+      "gold_chunks": [
+        1
+      ]
+    },
+    {
+      "id": 22,
+      "question": "怎么申请课程免修",
+      "answer_keywords": [
+        "审核",
+        "参加免修考试",
+        "80"
+      ],
+      "gold_chunks": [
+        3
+      ]
+    },
+    {
+      "id": 23,
+      "question": "课程成绩如何换算学分绩点",
+      "answer_keywords": [
+        "百分制"
+      ],
+      "gold_chunks": [
+        4
+      ]
+    },
+    {
+      "id": 24,
+      "question": "什么情形下会被视作自动退学",
+      "answer_keywords": [
+        "超过四周未注册且未办理暂缓手续"
+      ],
+      "gold_chunks": [
+        1
+      ]
+    },
+    {
+      "id": 25,
+      "question": "哪些情形不授予学士学位",
+      "answer_keywords": [
+        "学术不端行为",
+        "留校察看",
+        "2.0"
+      ],
+      "gold_chunks": [
+        7
+      ]
     }
   ]
 }
